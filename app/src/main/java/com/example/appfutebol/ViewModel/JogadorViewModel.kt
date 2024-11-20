@@ -44,52 +44,67 @@ class JogadorViewModel(private val jogadorDao: JogadorDao) : ViewModel() {
     }
 
     //Salva o Novo Jogador no Banco
-    suspend fun salvarJogador(nome: String, posicao: String, numero: Int, pernaBoa: String, altura: Double,
+    fun adicionarJogador(nome: String, posicao: String, numero: Int, pernaBoa: String, altura: Double,
                       idade: Int, nacionalidade: String): String{
-        if(nome.isBlank() || posicao.isBlank()|| pernaBoa.isBlank() || altura <= 0 || nacionalidade.isBlank() ){
-            return "Preencha todos os campos!"
+
+        return try {
+            if(nome.isBlank() || posicao.isBlank()|| pernaBoa.isBlank() || altura <= 0 || nacionalidade.isBlank() ){
+                return "Preencha todos os campos!"
+            }
+
+            val novoJogador = Jogador(
+                id = 0,
+                nome,
+                posicao,
+                numero,
+                pernaBoa,
+                altura,
+                idade,
+                nacionalidade)
+
+            viewModelScope.launch {
+                jogadorDao.inserirJogador(novoJogador)
+                carregarJogadores()
+            }
+
+            "Jogador salvo com sucesso!"
+        } catch (e: Exception){
+            "Erro ao adicionar Jogador: ${e.message}"
         }
-
-        val jogador = Jogador(id = 0, nome, posicao, numero, pernaBoa, altura, idade, nacionalidade)
-
-        viewModelScope.launch {
-            jogadorDao.inserirJogador(jogador)
-            carregarJogadores()
-        }
-
-        return "Jogador salvo com sucesso!"
     }
 
     //Atualiza um Jogador
-    suspend fun atualizarJogador(id: Int, nome: String, posicao: String, numero: Int, pernaBoa: String,
+    fun atualizarJogador(id: Int, nome: String, posicao: String, numero: Int, pernaBoa: String,
                                  altura: Double, idade: Int, nacionalidade: String): String {
-        if(nome.isBlank() || posicao.isBlank()|| pernaBoa.isBlank() || altura <= 0 || nacionalidade.isBlank() ) {
-            return "Preencha todos os campos!"
+
+        return try {
+            if(nome.isBlank() || posicao.isBlank()|| pernaBoa.isBlank() || altura <= 0 || nacionalidade.isBlank() ) {
+                return "Preencha todos os campos!"
+            }
+
+            viewModelScope.launch {
+                val jogador = jogadorDao.buscarJogadorPorId(id)
+                val jogadorAtualizado = jogador.copy(
+                    nome = nome,
+                    posicao = posicao,
+                    numero = numero,
+                    pernaBoa = pernaBoa,
+                    altura = altura,
+                    idade = idade,
+                    nacionalidade = nacionalidade
+                )
+                jogadorDao.editarJogador(jogadorAtualizado)
+                carregarJogadores()
+            }
+
+            "Jogador Atualizado!"
+        }catch (e: Exception){
+            "Erro ao atualizar Jogador: ${e.message}"
         }
-
-
-        val jogador = buscarJogadorPorId(id) ?: return "Jogador com ID $id não encontrado!"
-
-        val jogadorAtualizado = jogador.copy(
-            nome = nome,
-            posicao = posicao,
-            numero = numero,
-            pernaBoa = pernaBoa,
-            altura = altura,
-            idade = idade,
-            nacionalidade = nacionalidade
-        )
-
-        viewModelScope.launch {
-            jogadorDao.editarJogador(jogadorAtualizado)
-            carregarJogadores()
-        }
-
-        return "Jogador Atualizado!"
     }
 
     //Exclui um jogador
-    suspend fun excluirJogador(jogador: Jogador): String{
+    fun excluirJogador(jogador: Jogador): String{
         return try{
             viewModelScope.launch {
                 jogadorDao.excluirJogador(jogador)

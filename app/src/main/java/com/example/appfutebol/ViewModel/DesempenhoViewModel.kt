@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.appfutebol.Dao.DesempenhoDao
 import com.example.appfutebol.Model.Desempenho
+import com.example.appfutebol.Model.Partida
 import kotlinx.coroutines.launch
 
 class DesempenhoViewModel(private val desempenhoDao: DesempenhoDao) : ViewModel() {
@@ -23,6 +24,11 @@ class DesempenhoViewModel(private val desempenhoDao: DesempenhoDao) : ViewModel(
         }
     }
 
+    // Busca desempenho por ID
+    suspend fun buscarDesempenhoPorId(id: Int): Desempenho? {
+        return desempenhoDao.buscarDesempenhoPorId(id)
+    }
+
     // Adiciona um novo desempenho ao banco de dados
     fun adicionarDesempenho(
         idJogador: Int,
@@ -34,27 +40,32 @@ class DesempenhoViewModel(private val desempenhoDao: DesempenhoDao) : ViewModel(
         nota: Double,
         minutosJogados: Int
     ): String {
-        if (nota !in 0.0..10.0) {
-            return "A nota deve estar entre 0 e 10."
+
+        return try{
+            if (nota !in 0.0..10.0) {
+                return "A nota deve estar entre 0 e 10."
+            }
+
+            val novoDesempenho = Desempenho(
+                idJogador = idJogador,
+                idPartida = idPartida,
+                gols = gols,
+                assists = assists,
+                numCartoesAmarelos = numCartoesAmarelos,
+                numCartoesVermelhos = numCartoesVermelhos,
+                nota = nota,
+                minutosJogados = minutosJogados
+            )
+
+            viewModelScope.launch {
+                desempenhoDao.adicionarDesempenho(novoDesempenho)
+                carregarDesempenhos()
+            }
+
+            "Desempenho adicionado com sucesso!"
+        } catch (e: Exception){
+            "Erro ao adicionar Desempenho: ${e.message}"
         }
-
-        val novoDesempenho = Desempenho(
-            idJogador = idJogador,
-            idPartida = idPartida,
-            gols = gols,
-            assists = assists,
-            numCartoesAmarelos = numCartoesAmarelos,
-            numCartoesVermelhos = numCartoesVermelhos,
-            nota = nota,
-            minutosJogados = minutosJogados
-        )
-
-        viewModelScope.launch {
-            desempenhoDao.adicionarDesempenho(novoDesempenho)
-            carregarDesempenhos()
-        }
-
-        return "Desempenho adicionado com sucesso!"
     }
 
     // Atualiza os dados de um desempenho existente
@@ -69,40 +80,43 @@ class DesempenhoViewModel(private val desempenhoDao: DesempenhoDao) : ViewModel(
         nota: Double,
         minutosJogados: Int
     ): String {
-        viewModelScope.launch {
-            val desempenhoAtual = desempenhoDao.buscarDesempenhoPorId(id)
-                ?: return@launch
+        return try {
+            viewModelScope.launch {
+                val desempenhoAtual = desempenhoDao.buscarDesempenhoPorId(id)
 
-            val desempenhoAtualizado = desempenhoAtual.copy(
-                idJogador = idJogador,
-                idPartida = idPartida,
-                gols = gols,
-                assists = assists,
-                numCartoesAmarelos = numCartoesAmarelos,
-                numCartoesVermelhos = numCartoesVermelhos,
-                nota = nota,
-                minutosJogados = minutosJogados
-            )
+                val desempenhoAtualizado = desempenhoAtual.copy(
+                    idJogador = idJogador,
+                    idPartida = idPartida,
+                    gols = gols,
+                    assists = assists,
+                    numCartoesAmarelos = numCartoesAmarelos,
+                    numCartoesVermelhos = numCartoesVermelhos,
+                    nota = nota,
+                    minutosJogados = minutosJogados
+                )
 
-            desempenhoDao.editarDesempenho(desempenhoAtualizado)
-            carregarDesempenhos()
+                desempenhoDao.editarDesempenho(desempenhoAtualizado)
+                carregarDesempenhos()
+            }
+
+            "Desempenho atualizado com sucesso!"
+        }catch (e: Exception){
+            "Erro ao atualizar desempenho: ${e.message}"
         }
-
-        return "Desempenho atualizado com sucesso!"
     }
 
     // Exclui um desempenho
     fun excluirDesempenho(desempenho: Desempenho): String {
-        viewModelScope.launch {
-            desempenhoDao.excluirDesempenho(desempenho)
-            carregarDesempenhos()
+        return try {
+            viewModelScope.launch {
+                desempenhoDao.excluirDesempenho(desempenho)
+                carregarDesempenhos()
+            }
+
+            "Desempenho excluído com sucesso!"
+        } catch (e: Exception){
+            "Erro ao excluir desempenho: ${e.message}"
         }
-
-        return "Desempenho excluído com sucesso!"
     }
 
-    // Busca desempenho por ID
-    suspend fun buscarDesempenhoPorId(id: Int): Desempenho? {
-        return desempenhoDao.buscarDesempenhoPorId(id)
-    }
 }

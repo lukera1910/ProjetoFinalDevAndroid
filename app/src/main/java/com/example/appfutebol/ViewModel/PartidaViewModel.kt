@@ -4,6 +4,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.appfutebol.Dao.PartidaDao
+import com.example.appfutebol.Model.Jogador
 import com.example.appfutebol.Model.Partida
 import kotlinx.coroutines.launch
 
@@ -23,25 +24,35 @@ class PartidaViewModel(private val partidaDao: PartidaDao) : ViewModel() {
         }
     }
 
+    //Faz a Busca no banco da partida com esse Id, se não existir retorna null
+    //Função Assíncrona
+    suspend fun buscarPartidaPorId(id: Int): Partida? {
+        return partidaDao.buscarPartidaPorId(id)
+    }
+
     // Adiciona uma nova Partida
     fun adicionarPartida(data: String, adversario: String, resultado: String): String {
-        if (data.isBlank() || adversario.isBlank() || resultado.isBlank()) {
-            return "Preencha todos os campos!"
+        return try {
+            if (data.isBlank() || adversario.isBlank() || resultado.isBlank()) {
+                return "Preencha todos os campos!"
+            }
+
+            val novaPartida = Partida(
+                id = 0,
+                data = data,
+                adversario = adversario,
+                resultado = resultado
+            )
+
+            viewModelScope.launch {
+                partidaDao.adicionarPartida(novaPartida)
+                carregarPartidas()
+            }
+
+            "Partida adicionada com sucesso!"
+        } catch (e: Exception){
+            "Erro ao adicionar partida: ${e.message}"
         }
-
-        val novaPartida = Partida(
-            id = 0,
-            data = data,
-            adversario = adversario,
-            resultado = resultado
-        )
-
-        viewModelScope.launch {
-            partidaDao.adicionarPartida(novaPartida)
-            carregarPartidas()
-        }
-
-        return "Partida adicionada com sucesso!"
     }
 
     // Atualiza uma Partida existente
@@ -51,33 +62,43 @@ class PartidaViewModel(private val partidaDao: PartidaDao) : ViewModel() {
         adversario: String,
         resultado: String
     ): String {
-        if (data.isBlank() || adversario.isBlank() || resultado.isBlank()) {
-            return "Preencha todos os campos!"
-        }
 
-        viewModelScope.launch {
-            val partidaExistente = partidaDao.buscarPartidaPorId(id)
-            if (partidaExistente != null) {
-                val partidaAtualizada = partidaExistente.copy(
-                    data = data,
-                    adversario = adversario,
-                    resultado = resultado
-                )
-
-                partidaDao.editarPartida(partidaAtualizada)
-                carregarPartidas()
+        return try {
+            if (data.isBlank() || adversario.isBlank() || resultado.isBlank()) {
+                return "Preencha todos os campos!"
             }
-        }
 
-        return "Partida atualizada com sucesso!"
+            viewModelScope.launch {
+                val partidaExistente = partidaDao.buscarPartidaPorId(id)
+                if (partidaExistente != null) {
+                    val partidaAtualizada = partidaExistente.copy(
+                        data = data,
+                        adversario = adversario,
+                        resultado = resultado
+                    )
+
+                    partidaDao.editarPartida(partidaAtualizada)
+                    carregarPartidas()
+                }
+            }
+
+            "Partida atualizada com sucesso!"
+        } catch (e: Exception){
+            "Erro ao atualizar partida: ${e.message}"
+        }
     }
 
     // Exclui uma Partida
     fun excluirPartida(partida: Partida): String {
-        viewModelScope.launch {
-            partidaDao.excluirPartida(partida)
-            carregarPartidas()
+        return try {
+            viewModelScope.launch {
+                partidaDao.excluirPartida(partida)
+                carregarPartidas()
+            }
+            "Partida excluída com sucesso!"
+        } catch (e: Exception){
+            "Erro ao excluir partida: ${e.message}"
         }
-        return "Partida excluída com sucesso!"
+
     }
 }
