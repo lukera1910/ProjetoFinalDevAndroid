@@ -4,21 +4,29 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.input.TextFieldValue
+import com.example.appfutebol.Database.AppDatabase
 import com.example.appfutebol.View.PartidasActivity
+import com.example.appfutebol.ViewModel.JogadorViewModel
+import com.example.appfutebol.ViewModelFactory.JogadorViewModelFactory
 
 class JogadoresActivity : ComponentActivity() {
+    private val jogadorViewModel: JogadorViewModel by viewModels {
+        val dao = AppDatabase.getDatabase(applicationContext).jogadorDao()
+        JogadorViewModelFactory(dao)
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             TelaJogadores(
-                onAdicionarJogador = { /* Abrir cadastro de jogador */ },
+                jogadorViewModel = jogadorViewModel,
+                onAdicionarJogador = { /*jogadorViewModel.adicionarJogador()*/ },
                 onPartidasClick = {
                     val intent = Intent(this, PartidasActivity::class.java)
                     startActivity(intent)
@@ -31,11 +39,21 @@ class JogadoresActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TelaJogadores(
+    jogadorViewModel: JogadorViewModel,
     onAdicionarJogador: () -> Unit,
     onPartidasClick: () -> Unit
 ) {
     var busca by remember { mutableStateOf(TextFieldValue("")) }
-    val jogadores = remember { mutableStateListOf("Jogador 1 - Atacante", "Jogador 2 - Goleiro") }
+
+    var nome by remember { mutableStateOf("") }
+    var posicao by remember { mutableStateOf("") }
+    var numero by remember { mutableIntStateOf(1) }
+    var pernaBoa by remember { mutableStateOf("") }
+    var altura by remember { mutableDoubleStateOf(0.0) }
+    var idade by remember { mutableIntStateOf(16) }
+    var nacionalidade by remember { mutableStateOf("") }
+
+    val jogadores by jogadorViewModel.listaJogadores
 
     Scaffold(
         topBar = {
@@ -63,20 +81,20 @@ fun TelaJogadores(
             )
             Spacer(modifier = Modifier.height(16.dp))
 
-            jogadores.filter { it.contains(busca.text, ignoreCase = true) }.forEach { jogador ->
-                ListItem(
-                    headlineContent = { Text(jogador) },
-                    trailingContent = {
-                        Row {
-                            Button(onClick = { /* Editar */ }) { Text("Editar") }
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Button(onClick = { /* Excluir */ }) { Text("Excluir") }
-                        }
+            val jogador = jogadorViewModel.buscarJogadorPorNome(busca.text)
+            ListItem(
+                headlineContent = { Text(text = jogador!!.nome) },
+                trailingContent = {
+                    Row {
+                        Button(onClick = { /*TODO*/ }) { Text(text = "Editar")}
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Button(onClick = { /*TODO*/ }) { Text(text = "Excluir")}
                     }
-                )
-            }
+                }
+            )
 
             Spacer(modifier = Modifier.height(16.dp))
+
             Button(
                 onClick = onAdicionarJogador,
                 modifier = Modifier.fillMaxWidth()

@@ -27,20 +27,35 @@ class JogadorViewModel(private val jogadorDao: JogadorDao) : ViewModel() {
 
     //Faz a Busca no banco do jogador com esse Id, se não existir retorna null
     //Função Assíncrona
-    suspend fun buscarJogadorPorId(id: Int): Jogador? {
-        return jogadorDao.buscarJogadorPorId(id)
+    fun buscarJogadorPorId(id: Int): Jogador? {
+        var jogador: Jogador? = null
+        viewModelScope.launch{
+            jogador = jogadorDao.buscarJogadorPorId(id)
+        }
+
+        return jogador
     }
 
     //Faz a Busca no banco do jogador com esse Nome, se não existir retorna null
     //Função Assíncrona
-    suspend fun buscarJogadorPorNome(nome: String): Jogador? {
-        return jogadorDao.buscarJogadorPorNome(nome)
+    fun buscarJogadorPorNome(nome: String): Jogador? {
+        var jogador: Jogador? = null
+        viewModelScope.launch{
+            jogador = jogadorDao.buscarJogadorPorNome(nome)
+        }
+
+        return jogador
     }
 
     //Faz a Busca no banco do jogador com essa Posição, se não existir retorna null
     //Função Assíncrona
-    suspend fun buscarJogadorPorPosicao(posicao: String): Jogador? {
-        return jogadorDao.buscarJogadorPorPosicao(posicao)
+    fun buscarJogadorPorPosicao(posicao: String): Jogador? {
+        var jogador: Jogador? = null
+        viewModelScope.launch{
+            jogador = jogadorDao.buscarJogadorPorPosicao(posicao)
+        }
+
+        return jogador
     }
 
     //Salva o Novo Jogador no Banco
