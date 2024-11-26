@@ -26,3 +26,5 @@ Após baixar o projeto, você pode abrir no Android Studio. Para isso, na tela i
 - File, depois Open:
 - Procure o local onde o projeto está e o selecione (Caso o projeto seja baixado via zip, necessário extraí-lo antes de procurá-lo)
 - Por fim, clique em OK
+
+O Android Studio deve executar algumas tasks do Gradle para configurar o projeto, aguarde até finalizar. Ao finalizar as tasks, você pode executar o App 🏆
