@@ -8,10 +8,12 @@ Tela de Jogadores (Activity 1):
 -	Exibe uma lista de jogadores cadastrados com informações básicas, como nome, posição e número.
 -	Inclui opções para adicionar, editar e excluir jogadores.
 -	Permite buscar jogadores por nome ou posição.
+
 Tela de Partidas e Desempenho (Activity 2):
 -	Exibe uma lista de partidas registradas, com informações como data, adversário e resultado.
 -	Ao selecionar uma partida, é possível ver e registrar o desempenho de cada jogador (gols, assistências, cartões, notas).
 -	Permite adicionar uma nova partida e registrar o desempenho dos jogadores que participaram.
+
 Navegação entre Activities:
 -	A Activity de Jogadores é a tela principal, com navegação para a Activity de Partidas ao selecionar um jogador para ver o desempenho em cada partida.
 
