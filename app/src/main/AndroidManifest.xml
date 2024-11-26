@@ -13,7 +13,7 @@
         android:theme="@style/Theme.AppFutebol"
         tools:targetApi="31">
         <activity
-            android:name=".JogadoresActivity"
+            android:name=".View.JogadoresActivity"
             android:exported="true"
             android:label="@string/app_name"
             android:theme="@style/Theme.AppFutebol">
@@ -24,7 +24,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".PartidasActivity"
+            android:name=".View.PartidasActivity"
             android:exported="true"
             android:label="@string/app_name"
             android:theme="@style/Theme.AppFutebol">
