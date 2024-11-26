@@ -1,57 +1,41 @@
-@Composable
-fun TelaDetalhesPartida(
-    partida: Partida,
-    desempenhos: List<Desempenho>,
-    onAdicionarDesempenho: (Desempenho) -> Unit
-) {
-    var jogador by remember { mutableStateOf("") }
-    var gols by remember { mutableStateOf(0) }
-    var assistencias by remember { mutableStateOf(0) }
-    var cartoes by remember { mutableStateOf(0) }
-    var nota by remember { mutableStateOf(0.0) }
+package com.example.appfutebol
 
-    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-        Text(text = "Detalhes da Partida", style = MaterialTheme.typography.h5)
-        Text(text = "Adversário: ${partida.adversario}")
-        Text(text = "Resultado: ${partida.resultado}")
-        Text(text = "Data: ${partida.data}")
-        Spacer(modifier = Modifier.height(16.dp))
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.lifecycle.lifecycleScope
+import com.example.appfutebol.Database.AppDatabase
+import com.example.appfutebol.screens.TelaDetalhesPartida
+import com.example.appfutebol.ui.theme.AppFutebolTheme
+import kotlinx.coroutines.launch
 
-        LazyColumn(modifier = Modifier.weight(1f)) {
-            items(desempenhos) { desempenho ->
-                Text("Jogador: ${desempenho.idJogador} | Gols: ${desempenho.gols} | Nota: ${desempenho.nota}")
-            }
-        }
+class DetalhesPartidaActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
 
-        Spacer(modifier = Modifier.height(16.dp))
-        TextField(value = jogador, onValueChange = { jogador = it }, label = { Text("Jogador") })
-        Row {
-            TextField(value = gols.toString(), onValueChange = { gols = it.toIntOrNull() ?: 0 }, label = { Text("Gols") })
-            Spacer(modifier = Modifier.width(8.dp))
-            TextField(value = assistencias.toString(), onValueChange = { assistencias = it.toIntOrNull() ?: 0 }, label = { Text("Assistências") })
-        }
-        Row {
-            TextField(value = cartoes.toString(), onValueChange = { cartoes = it.toIntOrNull() ?: 0 }, label = { Text("Cartões") })
-            Spacer(modifier = Modifier.width(8.dp))
-            TextField(value = nota.toString(), onValueChange = { nota = it.toDoubleOrNull() ?: 0.0 }, label = { Text("Nota") })
-        }
-        Button(
-            onClick = {
-                onAdicionarDesempenho(
-                    Desempenho(
-                        idPartida = partida.id,
-                        idJogador = jogador.toIntOrNull() ?: 0, // Substituir por ID real do jogador
-                        gols = gols,
-                        assists = assistencias,
-                        numCartoesAmarelos = cartoes,
-                        nota = nota,
-                        minutosJogados = 90 // Ajustar dinamicamente se necessário
-                    )
+        // Obtendo o ID da partida
+        val partidaId = intent.getIntExtra("partidaId", 0)
+
+        // Inicializando o banco de dados
+        val db = AppDatabase.getDatabase(applicationContext)
+        val partidaDao = db.partidaDao()
+        val desempenhoDao = db.desempenhoDao()
+
+        setContent {
+            AppFutebolTheme {
+                val partida = partidaDao.getPartidaById(partidaId)
+                val desempenhos = desempenhoDao.getDesempenhoPorPartidaFlow(partidaId).collectAsState(initial = emptyList()).value
+
+                TelaDetalhesPartida(
+                    partida = partida,
+                    desempenhos = desempenhos,
+                    onAdicionarDesempenho = { desempenho ->
+                        lifecycleScope.launch {
+                            desempenhoDao.adicionarDesempenho(desempenho)
+                        }
+                    }
                 )
-            },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Registrar Desempenho")
+            }
         }
     }
 }
